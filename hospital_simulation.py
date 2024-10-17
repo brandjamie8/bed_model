@@ -46,6 +46,7 @@ for p_type in patient_types:
 
 # Bed Boarding
 ENABLE_BED_BOARDING = st.sidebar.checkbox('Enable Bed Boarding', value=True)
+EXTRA_BED_RATIO = st.sidebar.number_input('Extra Beds per N Beds', min_value=1, value=5)
 
 # NMCR Parameters
 st.sidebar.header('Not Meeting Criteria to Reside (NMCR) Parameters')
@@ -72,21 +73,20 @@ def run_simulation():
         def __init__(self, env, num_beds):
             self.env = env
             self.num_beds = num_beds
-            self.beds = simpy.Resource(env, capacity=num_beds)
+            self.occupied_beds = 0
+            self.extra_beds = 0  # Number of extra beds available due to bed boarding
             self.total_beds = num_beds
+            self.bed_capacity = num_beds  # Initial bed capacity
+            self.beds = simpy.PriorityResource(env, capacity=num_beds + (num_beds // EXTRA_BED_RATIO))
             self.occupancy = []
             self.times = []
-            self.env.process(self.adjust_beds())
+            self.env.process(self.monitor_occupancy())
             self.patients = []  # List to store patient data
 
-        def adjust_beds(self):
+        def monitor_occupancy(self):
             while True:
-                # Adjust the number of beds based on bed boarding policy
-                if ENABLE_BED_BOARDING and self.beds.count == self.beds.capacity:
-                    extra_beds = self.num_beds // 5
-                    self.beds.capacity = self.num_beds + extra_beds
-                else:
-                    self.beds.capacity = self.num_beds
+                # Record occupancy at each time step
+                self.record_occupancy()
                 yield self.env.timeout(1)
 
         def admit_patient(self, patient_id, p_type, length_of_stay):
@@ -106,11 +106,22 @@ def run_simulation():
             else:
                 total_length_of_stay = length_of_stay
 
-            with self.beds.request() as request:
+            # Determine priority (normal beds have higher priority than extra beds)
+            if self.occupied_beds < self.num_beds:
+                priority = 0  # Normal bed
+            else:
+                if ENABLE_BED_BOARDING and self.occupied_beds < (self.num_beds + self.num_beds // EXTRA_BED_RATIO):
+                    priority = 1  # Extra bed
+                else:
+                    priority = 2  # Wait until a bed is available
+
+            with self.beds.request(priority=priority) as request:
                 yield request
+                self.occupied_beds += 1
                 # Record occupancy when patient occupies a bed
                 self.record_occupancy()
                 yield self.env.timeout(total_length_of_stay)
+                self.occupied_beds -= 1
                 # Record occupancy when patient leaves
                 self.record_occupancy()
 
@@ -128,7 +139,7 @@ def run_simulation():
             })
 
         def record_occupancy(self):
-            self.occupancy.append(len(self.beds.users))
+            self.occupancy.append(self.occupied_beds)
             self.times.append(self.env.now)
 
     def patient_generator(env, hospital):
