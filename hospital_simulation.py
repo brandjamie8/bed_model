@@ -11,7 +11,7 @@ st.title('Hospital Bed Simulation')
 
 st.write("""
 This simulation models hospital bed occupancy over time, considering different patient types,
-arrival rates, lengths of stay, bed management policies, and patients not meeting criteria to reside (NMCR).
+arrival rates, lengths of stay, bed management policies, and patients not meeting criteria to reside (NMCTR).
 """)
 
 # Sidebar Parameters
