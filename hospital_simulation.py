@@ -180,7 +180,7 @@ patients_df = pd.DataFrame(patient_data)
 
 # Plot bed occupancy over time
 st.subheader('Bed Occupancy Over Time')
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(6, 6))
 ax.step(data['Time'], data['Occupancy'], where='post')
 ax.set_xlabel('Time (days)')
 ax.set_ylabel('Number of Occupied Beds')
