@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 
-st.set_page_config(page_title='Occupancy and LOS Analysis')
+st.set_page_config(page_title='Occupancy and LOS Analysis', layout='wide')
 
 st.title('Occupancy and Length of Stay Analysis')
 
