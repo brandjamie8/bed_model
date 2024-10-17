@@ -7,7 +7,8 @@ st.title('Occupancy and Length of Stay Analysis')
 
 st.write("""
 On this page, you can set a target occupancy rate and find out what the ideal average length of stay (LOS)
-would be to maintain this occupancy.\n Additionally, you'll see the number of discharges per week this translates to.
+would be to maintain this occupancy.
+Additionally, you'll see the number of discharges per week this translates to.
 """)
 
 # Sidebar Parameters
